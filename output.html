@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メッセージ表示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            color: black;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        
+        .name {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 72px;
+            font-weight: bold;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+        
+        .no-data {
+            font-size: 48px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="displayContent">
+        <div class="no-data">データを読み込み中...</div>
+    </div>
+
+    <script>
+        // ここにGoogle Apps ScriptのウェブアプリURLを貼り付けてください
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz_m5BxKsXMI5zdL7bon105qCpJL1pCTp9zCyBqCJ7B2-_xKlVLId9iDHf1EigP5OHs1A/exec';
+        
+        const displayContent = document.getElementById('displayContent');
+        
+        async function loadAndDisplayData() {
+            try {
+                const response = await fetch(GAS_URL);
+                const result = await response.json();
+                
+                if (result.data && result.data.name) {
+                    displayContent.innerHTML = `
+                        <div class="name">${result.data.name}より</div>
+                        <div class="message">${result.data.message}</div>
+                    `;
+                } else {
+                    displayContent.innerHTML = '<div class="no-data">データがありません</div>';
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                displayContent.innerHTML = '<div class="no-data">読み込みエラー</div>';
+            }
+        }
+        
+        // 初回読み込み
+        loadAndDisplayData();
+        
+        // 3秒ごとに自動更新
+        setInterval(loadAndDisplayData, 3000);
+    </script>
+</body>
+</html>

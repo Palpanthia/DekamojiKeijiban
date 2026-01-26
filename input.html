@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>メッセージ入力</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .current-data {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .current-data h2 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .current-data .data-content {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .current-data .data-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .current-data .data-item strong {
+            color: #667eea;
+            display: inline-block;
+            min-width: 100px;
+        }
+        
+        .current-data .no-data {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .keep-badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #fff3cd;
+            border-radius: 10px;
+            border: 2px solid #ffc107;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 メッセージ送信</h1>
+        
+        <div class="current-data">
+            <h2>💾 現在保存中のデータ</h2>
+            <div id="currentDataContent" class="data-content">
+                <div class="loading">読み込み中...</div>
+            </div>
+        </div>
+        
+        <form id="messageForm">
+            <div class="form-group">
+                <label for="name">名前</label>
+                <select id="name" name="name" required>
+                    <option value="">選択してください</option>
+                    <option value="田中太郎">田中太郎</option>
+                    <option value="鈴木花子">鈴木花子</option>
+                    <option value="佐藤次郎">佐藤次郎</option>
+                    <option value="山田美咲">山田美咲</option>
+                    <option value="高橋健太">高橋健太</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">メッセージ</label>
+                <textarea id="message" name="message" placeholder="メッセージを入力してください..." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="keepData" name="keepData">
+                    <label for="keepData">🔒 けさないで</label>
+                </div>
+            </div>
+            
+            <button type="submit" id="submitBtn">送信する</button>
+            
+            <div id="status" class="status"></div>
+        </form>
+    </div>
+
+    <script>
+        // ここにGoogle Apps ScriptのウェブアプリURLを貼り付けてください
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz_m5BxKsXMI5zdL7bon105qCpJL1pCTp9zCyBqCJ7B2-_xKlVLId9iDHf1EigP5OHs1A/exec';
+        
+        const form = document.getElementById('messageForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+        const currentDataContent = document.getElementById('currentDataContent');
+        const keepDataCheckbox = document.getElementById('keepData');
+        
+        let currentData = null;
+        
+        // ページ読み込み時に現在のデータを取得
+        async function loadCurrentData() {
+            try {
+                const response = await fetch(GAS_URL);
+                const result = await response.json();
+                
+                if (result.data && result.data.name) {
+                    currentData = result.data;
+                    displayCurrentData(result.data);
+                } else {
+                    currentDataContent.innerHTML = '<div class="no-data">保存されているデータはありません</div>';
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                currentDataContent.innerHTML = '<div class="no-data">データの読み込みに失敗しました</div>';
+            }
+        }
+        
+        function displayCurrentData(data) {
+            const timestamp = new Date(data.timestamp).toLocaleString('ja-JP');
+            const keepBadge = data.keepData ? '<span class="keep-badge">🔒 けさないで ON</span>' : '';
+            
+            currentDataContent.innerHTML = `
+                <div class="data-item"><strong>更新日時:</strong> ${timestamp}</div>
+                <div class="data-item"><strong>名前:</strong> ${data.name}</div>
+                <div class="data-item"><strong>メッセージ:</strong> ${data.message}</div>
+                <div class="data-item">${keepBadge}</div>
+            `;
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 「けさないで」がONの場合は警告を表示
+            if (currentData && currentData.keepData === true) {
+                const confirmed = confirm('⚠️ 警告\n\n現在「けさないで」機能がONになっています。\n上書きしてもよろしいですか?');
+                if (!confirmed) {
+                    return;
+                }
+            }
+            
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+            const keepData = keepDataCheckbox.checked;
+            
+            if (!name || !message) {
+                showStatus('すべての項目を入力してください', 'error');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '送信中...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('message', message);
+                formData.append('keepData', keepData);
+                
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus('✓ メッセージが送信されました!', 'success');
+                    form.reset();
+                    // データを再読み込み
+                    await loadCurrentData();
+                } else {
+                    showStatus('エラーが発生しました', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('送信に失敗しました。GAS URLを確認してください。', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '送信する';
+            }
+        });
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // ページ読み込み時にデータを取得
+        loadCurrentData();
+    </script>
+</body>
+</html>
