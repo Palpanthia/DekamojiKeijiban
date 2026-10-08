@@ -276,33 +276,44 @@
             const keepBadge = data.keepData ? '<span class="keep-badge">🔒 けさないで ON</span>' : '';
             
             currentDataContent.innerHTML = `
-                <div class="data-item"><strong>更新日時:</strong> ${timestamp}</div>
-                <div class="data-item"><strong>名前:</strong> ${data.name}</div>
-                <div class="data-item"><strong>メッセージ:</strong> ${data.message}</div>
+                <div class="data-item"><strong>更新日時:</strong> ${escapeHtml(timestamp)}</div>
+                <div class="data-item"><strong>名前:</strong> ${escapeHtml(data.name)}</div>
+                <div class="data-item"><strong>メッセージ:</strong> ${escapeHtml(data.message)}</div>
                 <div class="data-item">${keepBadge}</div>
             `;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
         
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 「けさないで」がONの場合は警告を表示
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value.trim();
+            const keepData = keepDataCheckbox.checked;
+
+            if (!name || !message) {
+                showStatus('すべての項目を入力してください', 'error');
+                return;
+            }
+
+            // 「けさないで」がONの場合は警告を表示（OKならサーバーにも上書きを許可する）
+            let force = false;
             if (currentData && currentData.keepData === true) {
                 const confirmed = confirm('⚠️ 警告\n\n現在「けさないで」機能がONになっています。\n上書きしてもよろしいですか?');
                 if (!confirmed) {
                     return;
                 }
+                force = true;
             }
-            
-            const name = document.getElementById('name').value;
-            const message = document.getElementById('message').value;
-            const keepData = keepDataCheckbox.checked;
-            
-            if (!name || !message) {
-                showStatus('すべての項目を入力してください', 'error');
-                return;
-            }
-            
+
             submitBtn.disabled = true;
             submitBtn.textContent = '送信中...';
             
@@ -311,7 +322,8 @@
                 formData.append('name', name);
                 formData.append('message', message);
                 formData.append('keepData', keepData);
-                
+                formData.append('force', force);
+
                 const response = await fetch(GAS_URL, {
                     method: 'POST',
                     body: formData
@@ -324,8 +336,11 @@
                     form.reset();
                     // データを再読み込み
                     await loadCurrentData();
+                } else if (result.status === 'locked') {
+                    showStatus('「けさないで」がONのため送信できません。ページを更新してください', 'error');
+                    await loadCurrentData();
                 } else {
-                    showStatus('エラーが発生しました', 'error');
+                    showStatus(result.message || 'エラーが発生しました', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);

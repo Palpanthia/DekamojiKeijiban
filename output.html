@@ -49,22 +49,44 @@
         
         const displayContent = document.getElementById('displayContent');
         
+        let lastRendered = null;
+
+        function render(key, build) {
+            // 内容が変わったときだけ描画（ちらつき防止）
+            if (key === lastRendered) return;
+            lastRendered = key;
+            displayContent.replaceChildren(build());
+        }
+
+        function el(className, text) {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text; // textContentでXSSを防ぐ
+            return div;
+        }
+
         async function loadAndDisplayData() {
             try {
                 const response = await fetch(GAS_URL);
                 const result = await response.json();
-                
+
                 if (result.data && result.data.name) {
-                    displayContent.innerHTML = `
-                        <div class="name">${result.data.name}より</div>
-                        <div class="message">${result.data.message}</div>
-                    `;
+                    const name = String(result.data.name);
+                    const message = String(result.data.message ?? '');
+                    render(JSON.stringify([name, message]), () => {
+                        const frag = document.createDocumentFragment();
+                        frag.append(el('name', `${name}より`), el('message', message));
+                        return frag;
+                    });
                 } else {
-                    displayContent.innerHTML = '<div class="no-data">データがありません</div>';
+                    render('empty', () => el('no-data', 'データがありません'));
                 }
             } catch (error) {
+                // 通信エラー時は直前の表示を残す（初回のみエラー表示）
                 console.error('Error loading data:', error);
-                displayContent.innerHTML = '<div class="no-data">読み込みエラー</div>';
+                if (lastRendered === null) {
+                    render('error', () => el('no-data', '読み込みエラー'));
+                }
             }
         }
         
